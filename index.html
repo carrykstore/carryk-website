@@ -67,6 +67,167 @@ footer {background:#222; color:white; text-align:center; padding:15px;}
 function order(product){
 window.open("https://wa.me/?text=I want to order " + product);
 }
+
+  carryk-website/
+│
+├── index.html
+├── admin.html
+├── style.css
+├── app.js
+├── firebase.js
+
+  <!DOCTYPE html>
+<html>
+<head>
+  <title>Carry K Store</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🛍 Carry K Store</h1>
+
+<div id="products"></div>
+
+<h2>Cart</h2>
+<div id="cart"></div>
+<button onclick="placeOrder()">Place Order</button>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+</head>
+<body>
+
+<h1>Admin Login</h1>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<h2>Add Product</h2>
+<input id="pname" placeholder="Product Name">
+<input id="pprice" placeholder="Price">
+<button onclick="addProduct()">Add</button>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+<script src="firebase.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
+
+body {
+  font-family: Arial;
+  text-align: center;
+  background: linear-gradient(blue, orange);
+  color: white;
+}
+
+#products div {
+  border: 1px solid white;
+  margin: 10px;
+  padding: 10px;
+}
+
+const firebaseConfig = {
+  apiKey: "PASTE_HERE",
+  authDomain: "PASTE_HERE",
+  projectId: "PASTE_HERE",
+  storageBucket: "PASTE_HERE",
+  messagingSenderId: "PASTE_HERE",
+  appId: "PASTE_HERE"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let cart = [];
+
+// LOAD PRODUCTS
+function loadProducts() {
+  db.collection("products").get().then(snapshot => {
+    let html = "";
+    snapshot.forEach(doc => {
+      let p = doc.data();
+      html += `
+        <div>
+          <h3>${p.name}</h3>
+          <p>₹${p.price}</p>
+          <button onclick="addToCart('${p.name}', ${p.price})">Add</button>
+        </div>
+      `;
+    });
+    document.getElementById("products").innerHTML = html;
+  });
+}
+
+// ADD TO CART
+function addToCart(name, price) {
+  cart.push({name, price});
+  renderCart();
+}
+
+// SHOW CART
+function renderCart() {
+  let html = "";
+  cart.forEach(item => {
+    html += `<p>${item.name} - ₹${item.price}</p>`;
+  });
+  document.getElementById("cart").innerHTML = html;
+}
+
+// PLACE ORDER
+function placeOrder() {
+  db.collection("orders").add({
+    items: cart,
+    time: new Date()
+  }).then(() => {
+    alert("Order placed!");
+    cart = [];
+    renderCart();
+  });
+}
+
+// ADMIN LOGIN
+function login() {
+  let email = document.getElementById("email").value;
+  let pass = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(() => alert("Login Success"))
+    .catch(err => alert(err.message));
+}
+
+// ADD PRODUCT
+function addProduct() {
+  let name = document.getElementById("pname").value;
+  let price = document.getElementById("pprice").value;
+
+  db.collection("products").add({
+    name: name,
+    price: price
+  }).then(() => alert("Product Added"));
+}
+
+// AUTO LOAD
+if (document.getElementById("products")) {
+  loadProducts();
+}
+
+
 </script>
 
 </body>
